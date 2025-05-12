@@ -17,3 +17,12 @@ class Shipments(Base):
     receiver_phone = Column(String, nullable=False)
     receiver_address = Column(String, nullable=False)
     shipments_qr_code = Column(LargeBinary)
+
+
+class Users(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    username = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    user_phone = Column(String, nullable=False)
+    role = Column(String, nullable=False)
