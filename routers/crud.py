@@ -4,6 +4,7 @@ import time
 import cv2  # OpenCV: görüntü işleme, kamera işlemleri
 from pyzbar.pyzbar import decode  # pyzbar: qr kodu, barkodu vs çözümleme için
 from pydantic import BaseModel, Field
+from starlette import status
 from models import Shipments, Senders
 from fastapi import APIRouter, HTTPException, Request
 from io import BytesIO
@@ -22,7 +23,7 @@ class ShipmentsModel(BaseModel):
     receiver_address: str = Field(max_length=500)
 
 
-@router.get("/qr_scan")
+@router.get("/qr_scan", status_code = status.HTTP_200_OK)
 async def qr_scan(db: db_annotated):
     # 0: varsayılan kamera. ve kameradan capture adında bir nesne oluşturuyoruz
     capture = cv2.VideoCapture(0)
@@ -65,7 +66,7 @@ async def qr_scan(db: db_annotated):
     cv2.destroyAllWindows()
 
 
-@router.post("/add")
+@router.post("/add", status_code = status.HTTP_201_CREATED)
 async def add_shipment(db: db_annotated, shipment: ShipmentsModel):
     # sender name'i alıp db'deki eşleşen veriyi bulup id'sini alıyoruz. böylece foreign key ile bağlanmış oluyor
     sender = db.query(Senders).filter(Senders.sender_name == shipment.sender_name).first()
@@ -95,14 +96,14 @@ async def add_shipment(db: db_annotated, shipment: ShipmentsModel):
     db.commit()
 
 
-@router.get("/{package_id}")
+@router.get("/{package_id}", status_code = status.HTTP_200_OK)
 async def get_shipment(db: db_annotated, package_id: str):
     find = db.query(Shipments).filter(Shipments.id == package_id).first()
     # http://127.0.0.1:8000/package/d86196b1-67d4-427f-9075-9ddd1f50099f
     return find.receiver_name, find.sender_id, find.receiver_phone, find.receiver_address
 
 
-@router.get("/get_all")
+@router.get("/get_all", status_code = status.HTTP_200_OK)
 async def get_all_shipments(db: db_annotated):
     return db.query(Shipments.receiver_address).all()
 
