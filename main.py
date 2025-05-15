@@ -18,4 +18,8 @@ Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 async def root(request: Request):
+    """
     return RedirectResponse("static/index.html")
+    """
+
+    return RedirectResponse("docs")
