@@ -6,15 +6,21 @@ from pyzbar.pyzbar import decode  # pyzbar: qr kodu, barkodu vs çözümleme iç
 from pydantic import BaseModel, Field
 from starlette import status
 from models import Shipments, Senders
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Depends  # , Request
 from io import BytesIO
 from asyncio.windows_events import NULL
 from database import db_annotated
+from typing import Annotated
+from routers.users import get_current_user
+from sqlalchemy.orm import defer
 
 router = APIRouter(
     prefix="/shipments",
     tags=["SHIPMENTS"],
 )
+
+user_dependency = Annotated[dict, Depends(get_current_user)]
+
 
 class ShipmentsModel(BaseModel):
     sender_name: str = Field(max_length=100)
@@ -23,8 +29,9 @@ class ShipmentsModel(BaseModel):
     receiver_address: str = Field(max_length=500)
 
 
-@router.get("/qr_scan", status_code = status.HTTP_200_OK)
-async def qr_scan(db: db_annotated):
+# qr'ı kameradan okuttuğunda sana shipmentsin linkini dönderiyor.
+@router.get("/qr_scan", status_code=status.HTTP_200_OK)
+async def qr_scan(user: user_dependency):
     # 0: varsayılan kamera. ve kameradan capture adında bir nesne oluşturuyoruz
     capture = cv2.VideoCapture(0)
 
@@ -42,8 +49,6 @@ async def qr_scan(db: db_annotated):
         for obj in decode(frame):
             typi = obj.type  # kodun tipi: qr mı barkod mu (eğer barkodsa tip: EAN13'tür)
             data = obj.data.decode("utf-8")  # okunabilirlik
-            print(f"QR OKUNDU: {data}")
-            print(type(data))
             time.sleep(5)
             if data != NULL:
                 # kameradan bağlantıyı kes, temiz kapama
@@ -51,6 +56,11 @@ async def qr_scan(db: db_annotated):
                 # opencv'nin pencerelerini kapatma
                 cv2.destroyAllWindows()
                 return data
+
+            """         
+                        print(f"QR LINKI: {data}")
+                        print(type(data)) :::::STR
+            """
 
         # görüntü ekranı gösterilir
         cv2.imshow('frame', frame)
@@ -66,12 +76,13 @@ async def qr_scan(db: db_annotated):
     cv2.destroyAllWindows()
 
 
-@router.post("/add", status_code = status.HTTP_201_CREATED)
-async def add_shipment(db: db_annotated, shipment: ShipmentsModel):
+@router.post("/create", status_code=status.HTTP_201_CREATED)
+async def create_shipment(user: user_dependency, db: db_annotated, shipment: ShipmentsModel):
     # sender name'i alıp db'deki eşleşen veriyi bulup id'sini alıyoruz. böylece foreign key ile bağlanmış oluyor
     sender = db.query(Senders).filter(Senders.sender_name == shipment.sender_name).first()
+
     if sender is None:
-        raise HTTPException(status_code=404, detail="Gönderici bulunamadı.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Gönderici bulunamadı.")
 
     # uuid ile (link için) id'yi komplike hale getiriyoruz
     sm_uuid = uuid.uuid4()
@@ -96,15 +107,46 @@ async def add_shipment(db: db_annotated, shipment: ShipmentsModel):
     db.commit()
 
 
-@router.get("/{package_id}", status_code = status.HTTP_200_OK)
-async def get_shipment(db: db_annotated, package_id: str):
-    find = db.query(Shipments).filter(Shipments.id == package_id).first()
-    # http://127.0.0.1:8000/package/d86196b1-67d4-427f-9075-9ddd1f50099f
-    return find.receiver_name, find.sender_id, find.receiver_phone, find.receiver_address
+@router.get("/get_info/{package_id}", status_code=status.HTTP_200_OK)
+async def get_shipment_info(user: user_dependency, package_id: str, db: db_annotated):
+    package = db.query(Shipments).filter(Shipments.id == package_id).first()
+    shipment_info = {
+        "receiver_name": package.receiver_name,
+        "receiver_phone": package.receiver_phone,
+        "receiver_address": package.receiver_address
+    }
+
+    # SENDER
+    sender = db.query(Senders).join(Shipments, Senders.id == Shipments.sender_id).filter(
+        Shipments.id == package_id).first()
+
+    if user["role"] == "delivery_guy" or user["role"] == "delivery_hub":
+        shipment_info["sender_phone"] = sender.sender_phone
+        if user["role"] == "delivery_hub":
+            shipment_info["sender_name"] = sender.sender_name
+
+        return shipment_info
+
+    return None
 
 
-@router.get("/get_all", status_code = status.HTTP_200_OK)
-async def get_all_shipments(db: db_annotated):
-    return db.query(Shipments.receiver_address).all()
+@router.put("/update/{package_id}", status_code=status.HTTP_200_OK)
+async def update_shipment(user: user_dependency, db: db_annotated, package_id: str, shipment: ShipmentsModel):
+    package = db.query(Shipments).filter(Shipments.id == package_id).options(defer(Shipments.shipments_qr_code)).first()
 
+    if not package:
+        raise HTTPException(status_code=404, detail="Package not found")
 
+    sender = db.query(Senders).filter(Senders.sender_name == shipment.sender_name).first()
+
+    if not sender:
+        raise HTTPException(status_code=404, detail="Sender not found")
+
+    package.sender_id = sender.id
+    package.receiver_address = shipment.receiver_address
+    package.receiver_name = shipment.receiver_name
+    package.receiver_phone = shipment.receiver_phone
+
+    db.commit()
+
+    return package

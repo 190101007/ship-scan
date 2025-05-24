@@ -11,6 +11,8 @@ app.include_router(crud_router)
 app.include_router(users_router)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+# TÜM TABLOLARI SİL
+#Base.metadata.drop_all(engine)
 
 # Veritabanı tablolarını oluştur
 Base.metadata.create_all(bind=engine)
@@ -23,3 +25,4 @@ async def root(request: Request):
     """
 
     return RedirectResponse("docs")
+

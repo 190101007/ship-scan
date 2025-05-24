@@ -8,7 +8,6 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
 from datetime import timedelta, timezone, datetime
-from starlette.responses import RedirectResponse
 
 router = APIRouter(
     prefix="/users",
@@ -26,8 +25,9 @@ oauth2_bearer = OAuth2PasswordBearer("/users/token")
 
 class UsersModel(BaseModel):
     username: str = Field(min_length=2, max_length=100)
-    password: str = Field(min_length=7, max_length=100)
+    password: str  # = Field(min_length=7, max_length=100)
     phone: str = Field(max_length=12)
+    address: str  # = Field(min_length = 3 , max_length=100)
     role: Literal["delivery_hub", "delivery_guy"]
 
 
@@ -66,11 +66,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
         role = payload.get("role")
         if user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-        elif role == "delivery_hub":
-            return None
-        elif role == "delivery_guy":
-            return None
-        return None
+        else:
+            return {"user_id": user_id, "role": role}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
@@ -81,7 +78,9 @@ async def create_user(db: db_annotated, user: UsersModel):
         username=user.username,
         hashed_password=bcrypt.hash(user.password),
         user_phone=user.phone,
+        address=user.address,
         role=user.role
     )
+
     db.add(new_user)
     db.commit()
