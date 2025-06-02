@@ -1,116 +1,172 @@
-/* Genel Stiller */
+/* Genel / Temel gövde ayarları */
 body {
     font-family: 'Arial', sans-serif;
     line-height: 1.6;
     margin: 0;
     padding: 0;
-    background-color: #f9f9f9;
-    color: #333;
+    background-color: #f4f4f4; /* Yeni sürümden alındı */
+    color: #333; /* Eski sürümden alındı */
 }
 
-.login-btn {
-    display: inline-block;
-    min-width: 80px;
-    height: 30px;
-    padding: 5px 10px;
-    margin-left: 5px;
-    text-decoration: none;
-    color: white;
-    background-color: #4CAF50;
-    border-radius: 3px;
-    font-size: 14px;
-    transition: all 0.3s ease;
-}
-
-.login-btn:hover {
-    background-color: #388E3C;
-    color: white;
-}
-
-.mid {
-    margin-top: 10px;
-    text-align: center;
-    line-height: 30px;
-}
-
-
+/* Ana kapsayıcı */
 .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
+    max-width: 800px; /* Eski sürümün geniş yapısı korundu */
+    margin: 0 auto; /* Eski sürümden alındı */
+    margin-top: 20px;
+    padding: 10px; /* Ortak kullanım */
+    padding-bottom: 20px;
+
+    background-color: #fff; /* Yeni sürümden alındı */
+    border-radius: 8px; /* Yeni sürümden alındı */
 }
 
 /* Dil Değiştirici Buton */
 .language-switcher {
-    text-align: right;
-    margin-bottom: 20px;
+    text-align: right; /* Eski sürümden alındı */
+    margin-bottom: 20px; /* Eski sürümden alındı */
 }
 
 .language-btn {
-    display: inline-block;
-    padding: 5px 10px;
-    margin-left: 5px;
-    text-decoration: none;
-    color: #555;
-    background-color: #e0e0e0;
-    border-radius: 3px;
-    font-size: 14px;
-    transition: all 0.3s ease;
+    display: inline-block; /* Eski sürümden alındı */
+    padding: 5px 10px; /* Eski sürümden alındı */
+    margin-left: 5px; /* Eski sürümden alındı */
+    text-decoration: none; /* Eski sürümden alındı */
+    color: #555; /* Eski sürümden alındı */
+    background-color: #e0e0e0; /* Eski sürümden alındı */
+    border-radius: 3px; /* Eski sürümden alındı */
+    font-size: 14px; /* Eski sürümden alındı */
+    transition: all 0.3s ease; /* Eski sürümden alındı */
 }
 
-.language-btn.active, .language-btn:hover {
-    background-color: #4CAF50;
-    color: white;
+.language-btn.active,
+.language-btn:hover {
+    background-color: #4CAF50; /* Eski sürümden alındı */
+    color: white; /* Eski sürümden alındı */
 }
 
-/* Başlık */
+/* Başlık bölümü */
 header {
-    text-align: center;
-    margin-bottom: 30px;
+    text-align: center; /* Hem eski hem yeni sürümde var */
+    margin-bottom: 30px; /* Eski sürümden alındı (daha fazla boşluk) */
 }
 
 header h1 {
-    color: #2c3e50;
-    font-size: 2.5em;
-    margin-bottom: 10px;
+    color: #2c3e50; /* Eski sürümün koyu başlık rengi */
+    font-size: 2.5em; /* Eski sürümün büyük yazı boyutu */
+}
+header h2 {
+    color: #2c3e50; /* Eski sürümün koyu başlık rengi */
+    font-size: 2em; /* Eski sürümün büyük yazı boyutu */
 }
 
-/* Proje Açıklaması */
+/* Proje Açıklaması / Açıklama-metın bölümü */
 .project-description {
-    background-color: white;
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: white; /* Eski sürümden alındı */
+    padding: 25px; /* Eski sürümden alındı */
+    border-radius: 8px; /* Eski sürümden alındı */
 }
 
 .project-description p {
-    margin-bottom: 15px;
+    margin-bottom: 15px; /* Eski sürümden alındı */
 }
 
-
+/* Form alanları */
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 15px; /* Hem eski hem yeni sürümde var */
 }
 
 .form-group label {
-    display: block;
-    margin-bottom: 5px;
-    color: #2c3e50;
-    font-weight: bold;
+    display: block; /* Hem eski hem yeni sürümde var */
+    margin-bottom: 5px; /* Hem eski hem yeni sürümde var */
+    color: #2c3e50; /* Eski sürümün koyu etiket rengi */
+    font-weight: bold; /* Eski sürümden alındı */
 }
 
 .form-group input {
-    width: 100%;
-    padding: 8px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
+    width: 100%; /* Hem eski hem yeni sürümde var */
+    padding: 8px 10px; /* Yeni sürümün daha dolgun iç boşluğu */
+    font-size: 14px; /* Hem eski hem yeni sürümde var */
+    border: 1px solid #ccc; /* Hem eski hem yeni sürümde var */
+    border-radius: 4px; /* Hem eski hem yeni sürümde var */
+    box-sizing: border-box; /* Eski sürümden alındı */
 }
 
+/* Buton ortalama bölümü */
+.mid {
+    margin-top: 10px; /* Eski sürümden alındı */
+    text-align: center; /* Yeni sürümden alındı */
+    line-height: 30px; /* Eski sürümden alındı */
+}
+
+/* Giriş ve genel buton stili */
+.login-btn {
+    display: inline-block; /* Eski sürümden alındı */
+    min-width: 80px; /* Eski sürümden alındı */
+    height: 30px; /* Eski sürümden alındı */
+    padding: 8px 15px; /* Eski sürümden alındı */
+    margin-left: 5px; /* Eski sürümden alındı */
+    text-decoration: none; /* Eski sürümden alındı */
+    color: white; /* Hem eski hem yeni sürümde var */
+    background-color: #4CAF50; /* Hem eski hem yeni sürümde var */
+    border-radius: 3px; /* Eski sürümün hafif yumuşak köşe */
+    font-size: 14px; /* Eski sürümden alındı */
+    transition: all 0.3s ease; /* Eski sürümden alındı */
+    cursor: pointer; /* Yeni sürümden alındı */
+    border: none; /* Yeni sürümden alındı */
+}
+
+.login-btn:hover {
+    background-color: #388E3C; /* Hem eski hem yeni sürümde var */
+    color: white; /* Hem eski hem yeni sürümde var */
+}
+
+/* Hata mesajı stili */
+.error-message {
+    color: #D8000C; /* Yeni sürümden alındı */
+    background-color: #FFD2D2; /* Yeni sürümden alındı */
+    padding: 10px; /* Yeni sürümden alındı */
+    border-radius: 4px; /* Yeni sürümden alındı */
+    margin-bottom: 15px; /* Yeni sürümden alındı */
+}
+
+/* Footer */
 footer {
-    text-align: center;
-    margin-top: 40px;
-    color: #777;
+    text-align: center; /* Eski sürümden alındı */
+    margin-top: 40px; /* Eski sürümden alındı */
+
+    color: #777; /* Eski sürümden alındı */
+    font-size: 14px; /* Eski sürümden alındı */
+
+}
+
+/* Dashboard ve hub sayfalarındaki butonlar */
+.dashboard-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 5px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.dashboard-btn:hover {
+    background-color: #388E3C;
+}
+
+/* Çıkış (Logout) butonu */
+.logout-btn {
+    background-color: #f44336;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
     font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.logout-btn:hover {
+    background-color: #d32f2f;
 }

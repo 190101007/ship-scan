@@ -6,18 +6,22 @@ from pyzbar.pyzbar import decode  # pyzbar: qr kodu, barkodu vs çözümleme iç
 from pydantic import BaseModel, Field
 from starlette import status
 from models import Shipments, Senders
-from fastapi import APIRouter, HTTPException, Depends  # , Request
+from fastapi import APIRouter, HTTPException, Depends, Request
 from io import BytesIO
 from asyncio.windows_events import NULL
 from database import db_annotated
 from typing import Annotated
 from routers.users import get_current_user
 from sqlalchemy.orm import defer
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
 
 router = APIRouter(
     prefix="/shipments",
     tags=["SHIPMENTS"],
 )
+
+templates = Jinja2Templates(directory="templates")
 
 user_dependency = Annotated[dict, Depends(get_current_user)]
 
@@ -77,34 +81,59 @@ async def qr_scan(user: user_dependency):
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
-async def create_shipment(user: user_dependency, db: db_annotated, shipment: ShipmentsModel):
-    # sender name'i alıp db'deki eşleşen veriyi bulup id'sini alıyoruz. böylece foreign key ile bağlanmış oluyor
-    sender = db.query(Senders).filter(Senders.sender_name == shipment.sender_name).first()
+async def create_shipment(request: Request, user: user_dependency, db: db_annotated):
+    if user["role"] != "delivery_hub":
+        return RedirectResponse(url="/users/login")
+        
+    form_data = await request.form()
+    
+    try:
+        # Convert form data to ShipmentsModel
+        shipment = ShipmentsModel(
+            sender_name=form_data.get("sender_name"),
+            receiver_name=form_data.get("receiver_name"),
+            receiver_phone=form_data.get("receiver_phone"),
+            receiver_address=form_data.get("receiver_address")
+        )
+        
+        # Find sender in database
+        sender = db.query(Senders).filter(Senders.sender_name == shipment.sender_name).first()
 
-    if sender is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Gönderici bulunamadı.")
+        if sender is None:
+            return templates.TemplateResponse("create-shipment.html", {
+                "request": request,
+                "error": "Sender not found"
+            })
 
-    # uuid ile (link için) id'yi komplike hale getiriyoruz
-    sm_uuid = uuid.uuid4()
-    sm_uuid = str(uuid.uuid4())
-    # uuid ile ürettiğimiz id'yi linkte kullanıyoruz ve sonra qr'a gömeceğiz
-    create_url = f"http://127.0.0.1:8000/shipments/{sm_uuid}"
-    new_qr = qrcode.make(create_url)
-    buffer = BytesIO()
-    new_qr.save(buffer, format="PNG")
-    qr_bytes = buffer.getvalue()
+        # Generate UUID and create QR code
+        sm_uuid = str(uuid.uuid4())
+        create_url = f"http://127.0.0.1:8000/shipments/{sm_uuid}"
+        new_qr = qrcode.make(create_url)
+        buffer = BytesIO()
+        new_qr.save(buffer, format="PNG")
+        qr_bytes = buffer.getvalue()
 
-    new_shipment = Shipments(
-        id=sm_uuid,
-        sender_id=sender.id,
-        receiver_name=shipment.receiver_name,
-        receiver_phone=shipment.receiver_phone,
-        receiver_address=shipment.receiver_address,
-        shipments_qr_code=qr_bytes
-    )
+        new_shipment = Shipments(
+            id=sm_uuid,
+            sender_id=sender.id,
+            receiver_name=shipment.receiver_name,
+            receiver_phone=shipment.receiver_phone,
+            receiver_address=shipment.receiver_address,
+            shipments_qr_code=qr_bytes
+        )
 
-    db.add(new_shipment)
-    db.commit()
+        db.add(new_shipment)
+        db.commit()
+        
+        # Redirect to hub-main with success message
+        response = RedirectResponse(url="/users/hub-main?success=Shipment created successfully", status_code=status.HTTP_302_FOUND)
+        return response
+        
+    except Exception as e:
+        return templates.TemplateResponse("create-shipment.html", {
+            "request": request,
+            "error": str(e)
+        })
 
 
 @router.get("/get_info/{package_id}", status_code=status.HTTP_200_OK)
@@ -150,3 +179,10 @@ async def update_shipment(user: user_dependency, db: db_annotated, package_id: s
     db.commit()
 
     return package
+
+
+@router.get("/create-form")
+async def show_create_form(request: Request, user: user_dependency):
+    if user["role"] != "delivery_hub":
+        return RedirectResponse(url="/users/login")
+    return templates.TemplateResponse("create-shipment.html", {"request": request})

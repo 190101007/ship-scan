@@ -1,5 +1,5 @@
 from typing import Literal, Annotated
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel, Field
 from starlette import status
 from database import db_annotated
@@ -8,11 +8,15 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
 from datetime import timedelta, timezone, datetime
+from fastapi.responses import RedirectResponse
+from fastapi.templating import Jinja2Templates
 
 router = APIRouter(
     prefix="/users",
     tags=["USERS"]
 )
+
+templates = Jinja2Templates(directory="templates")
 
 bcrypt = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -59,6 +63,11 @@ async def login_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Dep
     return {"access_token": token, "token_type": "Bearer"}
 
 
+@router.get("/login")
+async def login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
 async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -71,16 +80,46 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
+user_dependency = Annotated[dict, Depends(get_current_user)]
+
+
+@router.get("/dashboard")
+async def dashboard(current_user: user_dependency, request: Request):
+    """
+    GET /users/dashboard:
+    - get_current_user ile token’dan çözülen user bilgisi alınır.
+    - role’a göre hub-main veya guy-main şablonunu döner.
+    """
+    role = current_user["role"]
+    if role == "delivery_hub":
+        return templates.TemplateResponse("hub-main.html", {"request": request})
+    elif role == "delivery_guy":
+        return templates.TemplateResponse("guy-main.html", {"request": request})
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized role")
+
+
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
-async def create_user(db: db_annotated, user: UsersModel):
-    new_user = Users(
-        username=user.username,
-        hashed_password=bcrypt.hash(user.password),
-        user_phone=user.phone,
-        address=user.address,
-        role=user.role
-    )
+async def create_user(current_user: user_dependency,db: db_annotated, user: UsersModel ):
+    role = current_user["role"]
 
-    db.add(new_user)
-    db.commit()
+    try:
+        if role == "delivery_hub":
+            new_user = Users(
+                username=user.username,
+                hashed_password=bcrypt.hash(user.password),
+                user_phone=user.phone,
+                address=user.address,
+                role=user.role
+            )
+
+            db.add(new_user)
+            db.commit()
+            return {"message": "User created successfully"}
+        else:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized User.")
+
+    except:
+        return RedirectResponse(url="/users/login")
+
