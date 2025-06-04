@@ -32,6 +32,10 @@ templates = Jinja2Templates(directory="templates")
 Base.metadata.create_all(bind=engine)
 
 
+@app.get("/tr")
+async def get_tr(request: Request):
+    return templates.TemplateResponse("index-tr.html", {"request": request, "title": "Ana Sayfa (TR)"})
+
 @app.get("/")
 async def root(request: Request):
     """

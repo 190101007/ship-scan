@@ -11,6 +11,13 @@
         <h1>Delivery Hub Dashboard</h1>
     </header>
 
+    {% if success %}
+    <div class="mid"
+         style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+        {{ success }}
+    </div>
+    {% endif %}
+
 
     <div class="mid">
         <button class="dashboard-btn" onclick="window.location.href='/users/create'">

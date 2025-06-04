@@ -10,6 +10,7 @@ from jose import jwt, JWTError
 from datetime import timedelta, timezone, datetime
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi import Form
 
 router = APIRouter(
     prefix="/users",
@@ -138,29 +139,38 @@ async def dashboard(request: Request, current_user: user_dependency):
             detail="Yetkisiz erişim"
         )
 
+
 @router.get("/create")
 async def create_user_form(request: Request):
     return templates.TemplateResponse("create-user.html", {"request": request})
 
+
 @router.post("/create", status_code=status.HTTP_201_CREATED)
-async def create_user(current_user: user_dependency, db: db_annotated, user: UsersModel):
-    role = current_user["role"]
+async def create_user(request: Request,
+                      current_user: user_dependency,
+                      db: db_annotated,
+                      username: str = Form(...),
+                      password: str = Form(...),
+                      phone: str = Form(None),
+                      address: str = Form(None),
+                      role: Literal["delivery_hub", "delivery_guy"] = Form(...)
+                      ):
+    if current_user["role"] != "delivery_hub":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
-    try:
-        if role == "delivery_hub":
-            new_user = Users(
-                username=user.username,
-                hashed_password=bcrypt.hash(user.password),
-                user_phone=user.phone,
-                address=user.address,
-                role=user.role
-            )
-
-            db.add(new_user)
-            db.commit()
-            return {"message": "User created successfully"}
-        else:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized User.")
-
-    except:
-        return RedirectResponse(url="/users/login")
+    new_user = Users(
+        username=username,
+        hashed_password=bcrypt.hash(password),
+        user_phone=phone,
+        address=address,
+        role=role
+    )
+    db.add(new_user)
+    db.commit()
+    return templates.TemplateResponse(
+        "hub-main.html",
+        {
+            "request": request,
+            "success": "Yeni kullanıcı başarıyla oluşturuldu."
+        }
+    )
