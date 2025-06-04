@@ -23,8 +23,6 @@ bcrypt = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = "haZd%o_>>d9scU57?cuAv|HZGBENME"
 ALGORITHM = "HS256"
 
-oauth2_bearer = OAuth2PasswordBearer("/users/token")
-
 
 class UsersModel(BaseModel):
     username: str = Field(min_length=2, max_length=100)
@@ -56,40 +54,80 @@ def create_access_token(user_id: str, user_role: str, expires_delta: timedelta):
 
 
 @router.post("/token", response_model=TokenModel)
-async def login_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_annotated):
+async def login_access_token(response: Response, form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+                             db: db_annotated):
     user = authentication(form_data.username, form_data.password, db)
     token = create_access_token(user.id, user.role, timedelta(minutes=60))
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {token}",
+        httponly=True,
+        samesite="lax",
+        secure=False  # Prod ortamda HTTPS kullanıyorsanız True yapın
+    )
     return {"access_token": token, "token_type": "Bearer"}
 
 
-@router.get("/logout")
-async def logout(response: Response):
-    pass
+def get_token_from_cookie(request: Request) -> str:
+    token_cookie = request.cookies.get("access_token")
+    if not token_cookie:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+    # "Bearer <token>" → "<token>"
+    try:
+        return token_cookie.split(" ")[1]
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token format"
+        )
+
+
+async def get_current_user(
+        token: Annotated[str, Depends(get_token_from_cookie)]
+) -> dict:
+    """
+    - Cookie’den alınan token’ı decode eder.
+    - Payload içindeki user_id ve role’ü çekip, DB’den kullanıcıyı doğrular.
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("user_id")
+        role: str = payload.get("role")
+        if user_id is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    # DB’den kullanıcı obje’sini alabilirsiniz, ancak biz sadece user_id ve role döndürüyoruz:
+    return {"user_id": user_id, "role": role}
+
+
+user_dependency = Annotated[dict, Depends(get_current_user)]
+
 
 @router.get("/login")
 async def login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("user_id")
-        role = payload.get("role")
-        if user_id is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-        else:
-            return {"user_id": user_id, "role": role}
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-
-user_dependency = Annotated[dict, Depends(get_current_user)]
+@router.get("/logout")
+async def logout(response: Response):
+    """
+    - Cookie’yi siliyor ve kullanıcıyı login sayfasına yönlendiriyoruz.
+    """
+    response.delete_cookie("access_token")
+    return RedirectResponse(url="/users/login", status_code=status.HTTP_302_FOUND)
 
 
 @router.get("/dashboard")
 async def dashboard(request: Request, current_user: user_dependency):
+    """
+    - Rolüne göre hub-main.html veya guy-main.html döner.
+    - Token cookie’de valid ise sayfa render edilir, aksi hâlde 401 atar.
+    """
     role = current_user["role"]
-
     if role == "delivery_hub":
         return templates.TemplateResponse("hub-main.html", {"request": request})
     elif role == "delivery_guy":
@@ -100,6 +138,9 @@ async def dashboard(request: Request, current_user: user_dependency):
             detail="Yetkisiz erişim"
         )
 
+@router.get("/create")
+async def create_user_form(request: Request):
+    return templates.TemplateResponse("create-user.html", {"request": request})
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
 async def create_user(current_user: user_dependency, db: db_annotated, user: UsersModel):
@@ -123,4 +164,3 @@ async def create_user(current_user: user_dependency, db: db_annotated, user: Use
 
     except:
         return RedirectResponse(url="/users/login")
-
