@@ -6,8 +6,19 @@ from models import Base
 from routers.crud import router as crud_router
 from routers.users import router as users_router
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# CORS ayarları
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(crud_router)
 app.include_router(users_router)
 

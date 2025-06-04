@@ -1,5 +1,5 @@
 from typing import Literal, Annotated
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, Response
 from pydantic import BaseModel, Field
 from starlette import status
 from database import db_annotated
@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
 from datetime import timedelta, timezone, datetime
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 router = APIRouter(
@@ -23,7 +23,6 @@ bcrypt = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = "haZd%o_>>d9scU57?cuAv|HZGBENME"
 ALGORITHM = "HS256"
 
-# Token alma için OAuth2 yapılandırması
 oauth2_bearer = OAuth2PasswordBearer("/users/token")
 
 
@@ -63,6 +62,10 @@ async def login_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Dep
     return {"access_token": token, "token_type": "Bearer"}
 
 
+@router.get("/logout")
+async def logout(response: Response):
+    pass
+
 @router.get("/login")
 async def login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
@@ -84,24 +87,22 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 
 
 @router.get("/dashboard")
-async def dashboard(current_user: user_dependency, request: Request):
-    """
-    GET /users/dashboard:
-    - get_current_user ile token’dan çözülen user bilgisi alınır.
-    - role’a göre hub-main veya guy-main şablonunu döner.
-    """
+async def dashboard(request: Request, current_user: user_dependency):
     role = current_user["role"]
+
     if role == "delivery_hub":
         return templates.TemplateResponse("hub-main.html", {"request": request})
     elif role == "delivery_guy":
         return templates.TemplateResponse("guy-main.html", {"request": request})
     else:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized role")
-
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Yetkisiz erişim"
+        )
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
-async def create_user(current_user: user_dependency,db: db_annotated, user: UsersModel ):
+async def create_user(current_user: user_dependency, db: db_annotated, user: UsersModel):
     role = current_user["role"]
 
     try:

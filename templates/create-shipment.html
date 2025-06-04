@@ -13,13 +13,8 @@
     </header>
 
     <div class="project-description">
-        {% if error %}
-        <div class="error-message">
-            {{ error }}
-        </div>
-        {% endif %}
 
-        <form action="/shipments/create" method="post" enctype="application/x-www-form-urlencoded">
+        <form id="createShipmentForm" method="post" action="/shipments/create">
             <div class="form-group">
                 <label for="sender_name">Sender Name</label>
                 <input type="text" id="sender_name" name="sender_name" required>
@@ -49,5 +44,6 @@
         </div>
     </div>
 </div>
+
 </body>
 </html> 

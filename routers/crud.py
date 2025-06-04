@@ -81,29 +81,21 @@ async def qr_scan(user: user_dependency):
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
-async def create_shipment(request: Request, user: user_dependency, db: db_annotated):
-    if user["role"] != "delivery_hub":
-        return RedirectResponse(url="/users/login")
-        
-    form_data = await request.form()
-    
+async def create_shipment(shipment: ShipmentsModel, request: Request, user: user_dependency, db: db_annotated):
     try:
-        # Convert form data to ShipmentsModel
-        shipment = ShipmentsModel(
-            sender_name=form_data.get("sender_name"),
-            receiver_name=form_data.get("receiver_name"),
-            receiver_phone=form_data.get("receiver_phone"),
-            receiver_address=form_data.get("receiver_address")
-        )
-        
-        # Find sender in database
+        if user["role"] != "delivery_hub":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Bu işlem için yetkiniz yok"
+            )
+
         sender = db.query(Senders).filter(Senders.sender_name == shipment.sender_name).first()
 
         if sender is None:
-            return templates.TemplateResponse("create-shipment.html", {
-                "request": request,
-                "error": "Sender not found"
-            })
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Gönderici bulunamadı"
+            )
 
         # Generate UUID and create QR code
         sm_uuid = str(uuid.uuid4())
@@ -124,16 +116,15 @@ async def create_shipment(request: Request, user: user_dependency, db: db_annota
 
         db.add(new_shipment)
         db.commit()
-        
-        # Redirect to hub-main with success message
-        response = RedirectResponse(url="/users/hub-main?success=Shipment created successfully", status_code=status.HTTP_302_FOUND)
-        return response
-        
+
+        return f"oluşturuldu"
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        return templates.TemplateResponse("create-shipment.html", {
-            "request": request,
-            "error": str(e)
-        })
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
 
 
 @router.get("/get_info/{package_id}", status_code=status.HTTP_200_OK)
@@ -180,9 +171,3 @@ async def update_shipment(user: user_dependency, db: db_annotated, package_id: s
 
     return package
 
-
-@router.get("/create-form")
-async def show_create_form(request: Request, user: user_dependency):
-    if user["role"] != "delivery_hub":
-        return RedirectResponse(url="/users/login")
-    return templates.TemplateResponse("create-shipment.html", {"request": request})

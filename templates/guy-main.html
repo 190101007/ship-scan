@@ -1,30 +1,23 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
-  <title>Delivery Guy Dashboard</title>
-  <link rel="stylesheet" href="../static/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>Delivery Guy Dashboard</title>
+    <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
 <div class="container">
-  <header>
-    <h2>DELIVERY GUY</h2>
-    <button onclick="logout()" class="logout-btn">Logout</button>
-  </header>
 
-  <div class="project-description">
-    {% if request.query_params.get('success') %}
-    <div class="success-message">
-      {{ request.query_params.get('success') }}
-    </div>
-    {% endif %}
+    <header>
+        <h2>DELIVERY GUY</h2>
+    </header>
 
     <div class="button-wrapper">
-      <a href="/shipments/qr_scan" class="dashboard-btn">Scan QR</a>
+        <a href="/shipments/qr_scan" class="dashboard-btn">Scan QR</a>
     </div>
-  </div>
+
 </div>
 
 </body>
