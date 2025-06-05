@@ -1,4 +1,3 @@
-// static/shipment.js
 
 const createForm = document.getElementById('createShipmentForm');
 const logoutBtns = document.querySelectorAll('.logout-btn');
@@ -35,7 +34,6 @@ createForm.addEventListener('submit', async (event) => {
     }
 });
 
-// Logout işlemi
 async function logout() {
     try {
         await fetch('/users/logout', {
@@ -49,7 +47,6 @@ async function logout() {
     }
 }
 
-// logout butonlarına click listener verme (isterseniz direkt onclick’ten vazgeçebilir ve burada ekleyebilirsiniz)
 logoutBtns.forEach(btn => {
     btn.addEventListener('click', logout);
 });

@@ -1,5 +1,3 @@
-// static/auth.js
-
 // --- LOGIN İŞLEMİ ---
 const loginForm = document.getElementById('loginForm');
 const errorDiv = document.getElementById('error-message');
