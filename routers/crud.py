@@ -59,7 +59,8 @@ async def qr_scan(user: user_dependency):
                 capture.release()
                 # opencv'nin pencerelerini kapatma
                 cv2.destroyAllWindows()
-                return data
+
+                return RedirectResponse(url=data)
 
             """         
                         print(f"QR LINKI: {data}")
@@ -78,6 +79,16 @@ async def qr_scan(user: user_dependency):
     capture.release()
     # opencv'nin pencerelerini kapatma
     cv2.destroyAllWindows()
+
+
+@router.get("/create-form")
+async def show_create_form(request: Request, user: user_dependency):
+    if user["role"] != "delivery_hub":
+        return RedirectResponse(url="/users/login")
+
+    return templates.TemplateResponse(
+        "create-shipment.html", {"request": request}
+    )
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
@@ -127,8 +138,8 @@ async def create_shipment(shipment: ShipmentsModel, request: Request, user: user
         )
 
 
-@router.get("/get_info/{package_id}", status_code=status.HTTP_200_OK)
-async def get_shipment_info(user: user_dependency, package_id: str, db: db_annotated):
+@router.get("/{package_id}", status_code=status.HTTP_200_OK)
+async def get_shipment_info(request: Request,user: user_dependency, package_id: str, db: db_annotated):
     package = db.query(Shipments).filter(Shipments.id == package_id).first()
     shipment_info = {
         "receiver_name": package.receiver_name,
@@ -145,9 +156,9 @@ async def get_shipment_info(user: user_dependency, package_id: str, db: db_annot
         if user["role"] == "delivery_hub":
             shipment_info["sender_name"] = sender.sender_name
 
-        return shipment_info
+    return templates.TemplateResponse("read-shipment.html", {"request": request, **shipment_info })
 
-    return None
+
 
 
 @router.put("/update/{package_id}", status_code=status.HTTP_200_OK)

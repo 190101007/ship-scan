@@ -61,10 +61,7 @@ async def login_access_token(response: Response, form_data: Annotated[OAuth2Pass
     token = create_access_token(user.id, user.role, timedelta(minutes=60))
     response.set_cookie(
         key="access_token",
-        value=f"Bearer {token}",
-        httponly=True,
-        samesite="lax",
-        secure=False  # Prod ortamda HTTPS kullanıyorsanız True yapın
+        value=f"Bearer {token}"
     )
     return {"access_token": token, "token_type": "Bearer"}
 
@@ -76,7 +73,7 @@ def get_token_from_cookie(request: Request) -> str:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated"
         )
-    # "Bearer <token>" → "<token>"
+
     try:
         return token_cookie.split(" ")[1]
     except:
@@ -86,13 +83,7 @@ def get_token_from_cookie(request: Request) -> str:
         )
 
 
-async def get_current_user(
-        token: Annotated[str, Depends(get_token_from_cookie)]
-) -> dict:
-    """
-    - Cookie’den alınan token’ı decode eder.
-    - Payload içindeki user_id ve role’ü çekip, DB’den kullanıcıyı doğrular.
-    """
+async def get_current_user(token: Annotated[str, Depends(get_token_from_cookie)]):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("user_id")
@@ -101,7 +92,6 @@ async def get_current_user(
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    # DB’den kullanıcı obje’sini alabilirsiniz, ancak biz sadece user_id ve role döndürüyoruz:
     return {"user_id": user_id, "role": role}
 
 
@@ -115,9 +105,6 @@ async def login(request: Request):
 
 @router.get("/logout")
 async def logout(response: Response):
-    """
-    - Cookie’yi siliyor ve kullanıcıyı login sayfasına yönlendiriyoruz.
-    """
     response.delete_cookie("access_token")
     return RedirectResponse(url="/users/login", status_code=status.HTTP_302_FOUND)
 
@@ -125,8 +112,7 @@ async def logout(response: Response):
 @router.get("/dashboard")
 async def dashboard(request: Request, current_user: user_dependency):
     """
-    - Rolüne göre hub-main.html veya guy-main.html döner.
-    - Token cookie’de valid ise sayfa render edilir, aksi hâlde 401 atar.
+    Rolüne göre hub-main.html veya guy-main.html döner.
     """
     role = current_user["role"]
     if role == "delivery_hub":
@@ -146,15 +132,7 @@ async def create_user_form(request: Request):
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
-async def create_user(request: Request,
-                      current_user: user_dependency,
-                      db: db_annotated,
-                      username: str = Form(...),
-                      password: str = Form(...),
-                      phone: str = Form(None),
-                      address: str = Form(None),
-                      role: Literal["delivery_hub", "delivery_guy"] = Form(...)
-                      ):
+async def create_user(request: Request, current_user: user_dependency, db: db_annotated, username: str = Form(...), password: str = Form(...), phone: str = Form(None), address: str = Form(None), role: Literal["delivery_hub", "delivery_guy"] = Form(...)):
     if current_user["role"] != "delivery_hub":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 

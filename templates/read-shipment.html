@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shipment Details</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Shipment Details</h1>
+        </header>
+
+        <div class="project-description">
+            <div class="form-group">
+                <label for="receiver_name">Receiver Name</label>
+                <p id="receiver_name">{{ receiver_name }}</p>
+            </div>
+
+            <div class="form-group">
+                <label for="receiver_phone">Receiver Phone</label>
+                <p id="receiver_phone">{{ receiver_phone }}</p>
+            </div>
+
+            <div class="form-group">
+                <label for="receiver_address">Receiver Address</label>
+                <p id="receiver_address">{{ receiver_address }}</p>
+            </div>
+
+            <div class="form-group">
+                <label for="sender_phone">Sender Phone</label>
+                <p id="sender_phone">{{ sender_phone }}</p>
+            </div>
+
+            {% if sender_name %}
+            <div class="form-group">
+                <label for="sender_name">Sender Name</label>
+                <p id="sender_name">{{ sender_name }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

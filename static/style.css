@@ -49,6 +49,7 @@ header h1 {
     color: #2c3e50;
     font-size: 2.5em;
 }
+
 header h2 {
     color: #2c3e50;
     font-size: 2em;
@@ -75,7 +76,7 @@ header h2 {
     font-weight: bold;
 }
 
-.form-group input {
+.form-group input, .form-group select {
     width: 100%;
     padding: 8px 10px;
     font-size: 14px;
@@ -150,6 +151,7 @@ footer {
     cursor: pointer;
     font-size: 14px;
     transition: background-color 0.3s ease;
+    text-decoration: none;
 }
 
 .logout-btn:hover {

@@ -20,20 +20,25 @@
 
 
     <div class="mid">
-        <button class="dashboard-btn" onclick="window.location.href='/users/create'">
+        <a href="/users/create" class="dashboard-btn">
             Yeni Kullanıcı Oluştur
-        </button>
+        </a>
     </div>
 
     <div class="mid">
-        <button class="dashboard-btn" onclick="window.location.href='/shipments/create-shipment'">
+        <a href="/shipments/create-form" class="dashboard-btn">
             Yeni Kargo Oluştur
-        </button>
+        </a>
     </div>
 
-    <footer>
-        <button class="logout-btn">Logout</button>
-    </footer>
+    <div class="mid">
+        <a href="/shipments/qr_scan" class="dashboard-btn">Scan QR</a>
+    </div>
+
+
+    <div class="mid">
+        <a href="/users/logout" class="logout-btn">Logout</a>
+    </div>
 </div>
 
 <script src="/static/shipment.js"></script>
