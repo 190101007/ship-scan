@@ -122,7 +122,7 @@ async def dashboard(request: Request, current_user: user_dependency):
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Yetkisiz erişim"
+            detail="Unauthorized access"
         )
 
 
@@ -132,16 +132,16 @@ async def create_user_form(request: Request):
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
-async def create_user(request: Request, current_user: user_dependency, db: db_annotated, username: str = Form(...), password: str = Form(...), phone: str = Form(None), address: str = Form(None), role: Literal["delivery_hub", "delivery_guy"] = Form(...)):
+async def create_user(request: Request, current_user: user_dependency, db: db_annotated, user: UsersModel):
     if current_user["role"] != "delivery_hub":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
     new_user = Users(
-        username=username,
-        hashed_password=bcrypt.hash(password),
-        user_phone=phone,
-        address=address,
-        role=role
+        username=user.username,
+        hashed_password=bcrypt.hash(user.password),
+        user_phone=user.phone,
+        address=user.address,
+        role=user.role
     )
     db.add(new_user)
     db.commit()
@@ -149,6 +149,6 @@ async def create_user(request: Request, current_user: user_dependency, db: db_an
         "hub-main.html",
         {
             "request": request,
-            "success": "Yeni kullanıcı başarıyla oluşturuldu."
+            "success": "New user successfully created."
         }
     )

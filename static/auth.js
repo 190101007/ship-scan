@@ -1,4 +1,3 @@
-// --- LOGIN PROCESS ---
 const loginForm = document.getElementById('loginForm');
 const errorDiv = document.getElementById('error-message');
 
@@ -9,7 +8,6 @@ if (loginForm) {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
 
-    // Hide error message
     errorDiv.style.display = 'none';
     errorDiv.textContent = '';
 
