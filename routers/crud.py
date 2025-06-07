@@ -10,11 +10,13 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from io import BytesIO
 from asyncio.windows_events import NULL
 from database import db_annotated
-from typing import Annotated
+from typing import Annotated, Optional
 from routers.users import get_current_user
+from routers.senders import create_sender
 from sqlalchemy.orm import defer
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse
 
 router = APIRouter(
     prefix="/shipments",
@@ -28,6 +30,8 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 
 class ShipmentsModel(BaseModel):
     sender_name: str = Field(max_length=100)
+    sender_phone: str = Field(max_length=100)
+    sender_address: Optional[str] = Field(default=None, max_length=500)
     receiver_name: str = Field(max_length=100)
     receiver_phone: str = Field(max_length=12)
     receiver_address: str = Field(max_length=500)
@@ -86,29 +90,36 @@ async def show_create_form(request: Request, user: user_dependency):
     if user["role"] != "delivery_hub":
         return RedirectResponse(url="/users/login")
 
-    return templates.TemplateResponse(
-        "create-shipment.html", {"request": request}
+    return templates.TemplateResponse("create-shipment.html", {"request": request})
+
+
+@router.post("/create")
+async def create_shipment(shipment: ShipmentsModel, request: Request, user: user_dependency, db: db_annotated):
+    if user["role"] != "delivery_hub":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="NOT AUTHORIZED")
+
+    sender = (
+        db.query(Senders)
+        .filter(
+            Senders.sender_name == shipment.sender_name,
+            Senders.sender_phone == shipment.sender_phone
+        )
+        .first()
     )
 
+    if not sender:
+        if not shipment.sender_address:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="add_sender")
+        sender = Senders(
+            sender_name=shipment.sender_name,
+            sender_phone=shipment.sender_phone,
+            sender_address=shipment.sender_address
+        )
+        db.add(sender)
+        db.commit()
+        db.refresh(sender)
 
-@router.post("/create", status_code=status.HTTP_201_CREATED)
-async def create_shipment(shipment: ShipmentsModel, request: Request, user: user_dependency, db: db_annotated):
     try:
-        if user["role"] != "delivery_hub":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Bu işlem için yetkiniz yok"
-            )
-
-        sender = db.query(Senders).filter(Senders.sender_name == shipment.sender_name).first()
-
-        if sender is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Gönderici bulunamadı"
-            )
-
-        # Generate UUID and create QR code
         sm_uuid = str(uuid.uuid4())
         create_url = f"http://127.0.0.1:8000/shipments/{sm_uuid}"
         new_qr = qrcode.make(create_url)
@@ -124,22 +135,15 @@ async def create_shipment(shipment: ShipmentsModel, request: Request, user: user
             receiver_address=shipment.receiver_address,
             shipments_qr_code=qr_bytes
         )
-
         db.add(new_shipment)
         db.commit()
-
-        return f"oluşturuldu"
-    except HTTPException as e:
-        raise e
+        return JSONResponse({"redirect": "/users/dashboard"})
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get("/{package_id}", status_code=status.HTTP_200_OK)
-async def get_shipment_info(request: Request,user: user_dependency, package_id: str, db: db_annotated):
+async def get_shipment_info(request: Request, user: user_dependency, package_id: str, db: db_annotated):
     package = db.query(Shipments).filter(Shipments.id == package_id).first()
     shipment_info = {
         "receiver_name": package.receiver_name,
@@ -156,9 +160,7 @@ async def get_shipment_info(request: Request,user: user_dependency, package_id: 
         if user["role"] == "delivery_hub":
             shipment_info["sender_name"] = sender.sender_name
 
-    return templates.TemplateResponse("read-shipment.html", {"request": request, **shipment_info })
-
-
+    return templates.TemplateResponse("read-shipment.html", {"request": request, **shipment_info})
 
 
 @router.put("/update/{package_id}", status_code=status.HTTP_200_OK)
@@ -181,4 +183,3 @@ async def update_shipment(user: user_dependency, db: db_annotated, package_id: s
     db.commit()
 
     return package
-

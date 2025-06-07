@@ -1,4 +1,4 @@
-// --- LOGIN İŞLEMİ ---
+// --- LOGIN PROCESS ---
 const loginForm = document.getElementById('loginForm');
 const errorDiv = document.getElementById('error-message');
 
@@ -9,7 +9,7 @@ if (loginForm) {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
 
-    // Hata mesajını gizle
+    // Hide error message
     errorDiv.style.display = 'none';
     errorDiv.textContent = '';
 
@@ -21,27 +21,27 @@ if (loginForm) {
       const response = await fetch('/users/token', {
         method: 'POST',
         body: formData,
-        credentials: 'include' // Cookie’yi almak için
+        credentials: 'include' // To receive cookie
       });
       const data = await response.json();
 
       if (!response.ok) {
-        errorDiv.textContent = data.detail || 'Login başarısız';
+        errorDiv.textContent = data.detail || 'Login failed';
         errorDiv.style.display = 'block';
         return;
       }
 
-      // Artık JWT cookie’de; sadece dashboard’a yönlendir
+      // JWT is now in the cookie; redirect to dashboard
       window.location.href = '/users/dashboard';
     } catch (err) {
-      console.error('Login sırasında hata:', err);
-      errorDiv.textContent = 'Sunucu ile bağlantı kurulamadı';
+      console.error('Login error:', err);
+      errorDiv.textContent = 'Failed to connect to the server';
       errorDiv.style.display = 'block';
     }
   });
 }
 
-// --- CREATE SHIPMENT İŞLEMLERİ ---
+// --- CREATE SHIPMENT PROCESS ---
 const createForm = document.getElementById('createShipmentForm');
 
 if (createForm) {
@@ -64,23 +64,23 @@ if (createForm) {
       });
 
       if (response.status === 201) {
-        alert('Kargo başarıyla oluşturuldu!');
+        alert('Shipment created successfully!');
         createForm.reset();
       } else if (response.status === 401) {
-        alert('Yetkisiz erişim. Lütfen tekrar giriş yapın.');
+        alert('Unauthorized access. Please log in again.');
         window.location.href = '/users/login';
       } else {
         const errorData = await response.json();
-        alert(`Hata: ${errorData.detail || 'Sunucu hatası'}`);
+        alert(`Error: ${errorData.detail || 'Server error'}`);
       }
     } catch (err) {
-      console.error('Kargo oluşturma hatası:', err);
-      alert('Sunucu ile bağlantı kurulamadı');
+      console.error('Shipment creation error:', err);
+      alert('Failed to connect to the server');
     }
   });
 }
 
-// --- LOGOUT İŞLEMİ ---
+// --- LOGOUT PROCESS ---
 const logoutBtns = document.querySelectorAll('.logout-btn');
 
 if (logoutBtns.length > 0) {
@@ -91,7 +91,7 @@ if (logoutBtns.length > 0) {
         credentials: 'include'
       });
     } catch (err) {
-      console.error('Logout hatası:', err);
+      console.error('Logout error:', err);
     } finally {
       window.location.href = '/users/login';
     }
@@ -101,4 +101,3 @@ if (logoutBtns.length > 0) {
     btn.addEventListener('click', logout);
   });
 }
-

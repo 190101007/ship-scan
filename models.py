@@ -7,6 +7,7 @@ class Senders(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     sender_name = Column(String, nullable=False)
     sender_phone = Column(String, nullable=False)
+    sender_address = Column(String, nullable=False)
     shipments = relationship("Shipments", back_populates="sender")
 
 

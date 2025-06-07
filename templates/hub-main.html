@@ -1,14 +1,14 @@
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Delivery Hub Dashboard</title>
+    <title>Delivery Hub</title>
     <link rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
 <div class="container">
     <header>
-        <h1>Delivery Hub Dashboard</h1>
+        <h1>Delivery Hub</h1>
     </header>
 
     {% if success %}
@@ -20,21 +20,20 @@
 
 
     <div class="mid">
-        <a href="/users/create" class="dashboard-btn">
-            Yeni Kullanıcı Oluştur
+        <a href="/shipments/create-form" class="dashboard-btn">
+            Create New Shipment
         </a>
     </div>
 
     <div class="mid">
-        <a href="/shipments/create-form" class="dashboard-btn">
-            Yeni Kargo Oluştur
+        <a href="/users/create" class="dashboard-btn">
+            Create New User
         </a>
     </div>
 
     <div class="mid">
         <a href="/shipments/qr_scan" class="dashboard-btn">Scan QR</a>
     </div>
-
 
     <div class="mid">
         <a href="/users/logout" class="logout-btn">Logout</a>

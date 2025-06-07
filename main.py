@@ -5,13 +5,14 @@ from database import engine
 from models import Base
 from routers.crud import router as crud_router
 from routers.users import router as users_router
+from routers.senders import router as senders_router
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
 app.include_router(crud_router)
 app.include_router(users_router)
+app.include_router(senders_router)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -35,6 +36,8 @@ async def root(request: Request):
 
     return RedirectResponse("/templates/index.html")
 
-    """
     return templates.TemplateResponse("index.html", {"request": request, "title": "Ana Sayfa"})
 
+    """
+
+    return RedirectResponse("/users/dashboard")
