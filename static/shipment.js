@@ -1,50 +1,82 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("createShipmentForm");
-  const errorMessage = document.getElementById("error_message");
-  const addressGroup = document.getElementById("sender_address_group");
+document.addEventListener("DOMContentLoaded", function () {
+    const shipmentForm = document.getElementById("createShipmentForm");
+    if (!shipmentForm) return;
 
-  form.addEventListener("submit", async e => {
-    e.preventDefault();
-    errorMessage.classList.add("hidden");
-    addressGroup.classList.add("hidden");
+    const senderAddressDiv = document.getElementById("sender_address_group");
+    const senderAddressInput = document.getElementById("sender_address");
+    const errorMsgDiv = document.getElementById("error_message");
 
-    const payload = {
-      sender_name: document.getElementById("sender_name").value.trim(),
-      sender_phone: document.getElementById("sender_phone").value.trim(),
-      sender_address: document.getElementById("sender_address")?.value.trim(),
-      receiver_name: document.getElementById("receiver_name").value.trim(),
-      receiver_phone: document.getElementById("receiver_phone").value.trim(),
-      receiver_address: document.getElementById("receiver_address").value.trim()
-    };
+    shipmentForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
 
-    const res = await fetch("/shipments/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(payload)
+        const payload = {
+            sender_name: shipmentForm.sender_name.value,
+            sender_phone: shipmentForm.sender_phone.value,
+            sender_address: shipmentForm.sender_address.value,
+            receiver_name: shipmentForm.receiver_name.value,
+            receiver_phone: shipmentForm.receiver_phone.value,
+            receiver_address: shipmentForm.receiver_address.value,
+        };
+
+        try {
+            const res = await fetch("/shipments/create", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                const data = await res.json();
+                window.location.href = data.redirect || "/users/dashboard";
+            } else {
+                const errorData = await res.json();
+                if (errorData.detail === "add_sender") {
+                    senderAddressDiv.classList.remove("hidden");
+                    senderAddressInput.required = true;
+                    errorMsgDiv.classList.remove("hidden");
+                    errorMsgDiv.innerText = "Sender not found. Please enter the address!";
+                } else {
+                    errorMsgDiv.classList.remove("hidden");
+                    errorMsgDiv.innerText = errorData.detail || "An error occurred.";
+                }
+            }
+        } catch (e) {
+            errorMsgDiv.classList.remove("hidden");
+            errorMsgDiv.innerText = "An error occurred.";
+        }
     });
+});
 
-    const data = await res.json();
+document.addEventListener("DOMContentLoaded", function () {
+    const loginForm = document.getElementById("loginForm");
+    if (!loginForm) return;
 
-    if (res.status === 400 && data.detail === "add_sender") {
-      errorMessage.classList.remove("hidden");
-      addressGroup.classList.remove("hidden");
-      return;
-    }
+    const errorDiv = document.getElementById("error-message");
 
-    if (data.redirect) {
-      window.location.href = data.redirect;
-      return;
-    }
+    loginForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
 
-    if (!res.ok) {
-      alert(data.detail || "Error creating shipment");
-      return;
-    }
+        const username = loginForm.username.value;
+        const password = loginForm.password.value;
 
-    alert(data.message);
-    form.reset();
-    errorMessage.classList.add("hidden");
-    addressGroup.classList.add("hidden");
-  });
+        try {
+            const res = await fetch("/users/token", {
+                method: "POST",
+                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                body: new URLSearchParams({
+                    username,
+                    password,
+                })
+            });
+            if (res.ok) {
+                window.location.href = "/users/dashboard";
+            } else {
+                const data = await res.json();
+                errorDiv.style.display = "block";
+                errorDiv.innerText = data.detail || "Login failed.";
+            }
+        } catch {
+            errorDiv.style.display = "block";
+            errorDiv.innerText = "Login failed. Server error.";
+        }
+    });
 });

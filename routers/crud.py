@@ -137,7 +137,7 @@ async def create_shipment(shipment: ShipmentsModel, request: Request, user: user
         )
         db.add(new_shipment)
         db.commit()
-        return JSONResponse({"redirect": "/users/dashboard"})
+        return JSONResponse({"redirect": "/users/dashboard", "success": "Shipment successfully created."})
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
