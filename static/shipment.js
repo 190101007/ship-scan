@@ -21,11 +21,12 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const res = await fetch("/shipments/create", {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
             if (res.ok) {
                 const data = await res.json();
+                if (data.success) sessionStorage.setItem("success", data.success);
                 window.location.href = data.redirect || "/users/dashboard";
             } else {
                 const errorData = await res.json();
@@ -61,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const res = await fetch("/users/token", {
                 method: "POST",
-                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: new URLSearchParams({
                     username,
                     password,
@@ -79,4 +80,24 @@ document.addEventListener("DOMContentLoaded", function () {
             errorDiv.innerText = "Login failed. Server error.";
         }
     });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const msg = sessionStorage.getItem("success");
+    if (!msg) return;
+    sessionStorage.removeItem("success");
+
+    const container = document.querySelector(".container");
+    const div = document.createElement("div");
+    div.className = "mid";
+    Object.assign(div.style, {
+        backgroundColor: "#d4edda",
+        color: "#155724",
+        padding: "10px",
+        borderRadius: "4px",
+        marginBottom: "15px"
+    });
+    div.textContent = msg;
+
+    container.insertBefore(div, container.firstChild);
 });
