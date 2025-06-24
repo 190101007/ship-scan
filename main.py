@@ -36,8 +36,9 @@ async def root(request: Request):
 
     return RedirectResponse("/templates/index.html")
 
-    return templates.TemplateResponse("index.html", {"request": request, "title": "Ana Sayfa"})
+    return RedirectResponse("/users/dashboard")
 
     """
 
-    return RedirectResponse("/users/dashboard")
+
+    return templates.TemplateResponse("index.html", {"request": request, "title": "Ana Sayfa"})

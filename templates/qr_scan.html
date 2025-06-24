@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>QR Scan</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.7/html5-qrcode.min.js"></script>
+
+    <style>
+        #reader {
+            width: 100%;
+            max-width: 400px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+<h2 style="text-align:center;">QR Kod Tarayıcı</h2>
+<div id="reader"></div>
+<script>
+    function onScanSuccess(decodedText, decodedResult) {
+        window.location.href = decodedText;
+    }
+
+    function onScanError(errorMessage) {
+        console.warn(errorMessage);
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", {fps: 10, qrbox: 250}
+    );
+    html5QrcodeScanner.render(onScanSuccess, onScanError);
+</script>
+</body>
+</html>

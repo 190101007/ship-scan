@@ -17,6 +17,7 @@ from sqlalchemy.orm import defer
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from fastapi.responses import JSONResponse
+import base64
 
 router = APIRouter(
     prefix="/shipments",
@@ -36,6 +37,12 @@ class ShipmentsModel(BaseModel):
     receiver_phone: str = Field(max_length=12)
     receiver_address: str = Field(max_length=500)
 
+
+# crud.py’dan ilgili kısmı güncelliyoruz
+# @router.get("/qr_scan")
+# async def qr_scan_page(request: Request, user: user_dependency):
+#     return templates.TemplateResponse("qr_scan.html", {"request": request})
+#
 
 # qr'ı kameradan okuttuğunda sana shipmentsin linkini dönderiyor.
 @router.get("/qr_scan", status_code=status.HTTP_200_OK)
@@ -121,7 +128,7 @@ async def create_shipment(shipment: ShipmentsModel, request: Request, user: user
 
     try:
         sm_uuid = str(uuid.uuid4())
-        create_url = f"http://127.0.0.1:8000/shipments/{sm_uuid}"
+        create_url = f"{sm_uuid}"
         new_qr = qrcode.make(create_url)
         buffer = BytesIO()
         new_qr.save(buffer, format="PNG")
@@ -137,7 +144,13 @@ async def create_shipment(shipment: ShipmentsModel, request: Request, user: user
         )
         db.add(new_shipment)
         db.commit()
-        return JSONResponse({"redirect": "/users/dashboard", "success": "Shipment successfully created."})
+        # return JSONResponse({"redirect": "/users/dashboard", "success": "Shipment successfully created."})
+        return JSONResponse({
+            "redirect": f"/shipments/{sm_uuid}",
+            "success": "Shipment created."
+        })
+
+
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
@@ -145,10 +158,13 @@ async def create_shipment(shipment: ShipmentsModel, request: Request, user: user
 @router.get("/{package_id}", status_code=status.HTTP_200_OK)
 async def get_shipment_info(request: Request, user: user_dependency, package_id: str, db: db_annotated):
     package = db.query(Shipments).filter(Shipments.id == package_id).first()
+
+    qr_bytes = package.shipments_qr_code
     shipment_info = {
         "receiver_name": package.receiver_name,
         "receiver_phone": package.receiver_phone,
-        "receiver_address": package.receiver_address
+        "receiver_address": package.receiver_address,
+        "qr_code" : base64.b64encode(qr_bytes).decode()
     }
 
     # SENDER
