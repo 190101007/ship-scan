@@ -45,51 +45,10 @@ class ShipmentsModel(BaseModel):
 #
 
 # qr'ı kameradan okuttuğunda sana shipmentsin linkini dönderiyor.
-@router.get("/qr_scan", status_code=status.HTTP_200_OK)
-async def qr_scan(user: user_dependency):
-    # 0: varsayılan kamera. ve kameradan capture adında bir nesne oluşturuyoruz
-    capture = cv2.VideoCapture(0)
-
-    # 3: genişlik, 4: uzunluk anlamına gelir ve burada boyut ayarlıyoruz
-    capture.set(3, 200)
-    capture.set(4, 200)
-
-    # kameranın sürekli açık kalması
-    while True:
-        # oluşturduğunuz kamera nesnesinden read ile görüntü alıyoruz
-        # eğer başarılıysa success=true; okuduğumuz görüntü: frame, artık ekranımız bu
-        success, frame = capture.read()
-
-        # (frame)görüntüde qr kod/barkod var mı kontrol
-        for obj in decode(frame):
-            typi = obj.type  # kodun tipi: qr mı barkod mu (eğer barkodsa tip: EAN13'tür)
-            data = obj.data.decode("utf-8")  # okunabilirlik
-            time.sleep(5)
-            if data != NULL:
-                # kameradan bağlantıyı kes, temiz kapama
-                capture.release()
-                # opencv'nin pencerelerini kapatma
-                cv2.destroyAllWindows()
-
-                return RedirectResponse(url=data)
-
-            """         
-                        print(f"QR LINKI: {data}")
-                        print(type(data)) :::::STR
-            """
-
-        # görüntü ekranı gösterilir
-        cv2.imshow('frame', frame)
-
-        # waitKey(1): klavyeden veri geldi mi diye bakar ve 1 milisaniye bekler
-        # q tuşuna bastığında çıkış yapıyor. ama mutlaka kamera için açılan pencereye odaklandığına dikkat et. yani fare ile en son kamera için açılan pencereye tıklamış ol
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # kameradan bağlantıyı kes, temiz kapama
-    capture.release()
-    # opencv'nin pencerelerini kapatma
-    cv2.destroyAllWindows()
+@router.get("/qr_scan")
+async def qr_scan_page(request: Request, user: user_dependency):
+    # only show page; actual scanning happens in the browser
+    return templates.TemplateResponse("qr_scan.html", {"request": request})
 
 
 @router.get("/create-form")

@@ -1,35 +1,41 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>QR Scan</title>
-    <script src="https://unpkg.com/html5-qrcode@2.3.7/html5-qrcode.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>SCAN</title>
+    <script src="/static/html5-qrcode.min.js"></script>
 
-    <style>
-        #reader {
-            width: 100%;
-            max-width: 400px;
-            margin: auto;
-        }
-    </style>
 </head>
-<body>
-<h2 style="text-align:center;">QR Kod Tarayıcı</h2>
-<div id="reader"></div>
+<body style="text-align:center; font-family: Arial;">
+
+<h2>SCAN QR</h2>
+<div id="reader" style="width:300px; margin: auto;"></div>
+
 <script>
-    function onScanSuccess(decodedText, decodedResult) {
-        window.location.href = decodedText;
+    function onScanSuccess(decodedText) {
+
+        html5QrcodeScanner.clear().then(() => {
+
+            window.location.href = decodedText;
+        }).catch(err => {
+            console.error("Scanner temizlenirken hata:", err);
+            window.location.href = decodedText;
+        });
     }
 
-    function onScanError(errorMessage) {
-        console.warn(errorMessage);
+    function onScanFailure(error) {
+        console.warn("Tara hata:", error);
     }
 
+    // Scanner başlat
     const html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader", {fps: 10, qrbox: 250}
+        "reader",
+        {fps: 10, qrbox: 250},
+        /* verbose= */ false
     );
-    html5QrcodeScanner.render(onScanSuccess, onScanError);
+
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 </script>
 </body>
 </html>
