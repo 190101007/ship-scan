@@ -47,7 +47,6 @@ class ShipmentsModel(BaseModel):
 # qr'ı kameradan okuttuğunda sana shipmentsin linkini dönderiyor.
 @router.get("/qr_scan")
 async def qr_scan_page(request: Request, user: user_dependency):
-    # only show page; actual scanning happens in the browser
     return templates.TemplateResponse("qr_scan.html", {"request": request})
 
 
@@ -87,7 +86,7 @@ async def create_shipment(shipment: ShipmentsModel, request: Request, user: user
 
     try:
         sm_uuid = str(uuid.uuid4())
-        create_url = f"{sm_uuid}"
+        create_url = f"http://127.0.0.1:8000/shipments/{sm_uuid}"
         new_qr = qrcode.make(create_url)
         buffer = BytesIO()
         new_qr.save(buffer, format="PNG")
@@ -103,7 +102,6 @@ async def create_shipment(shipment: ShipmentsModel, request: Request, user: user
         )
         db.add(new_shipment)
         db.commit()
-        # return JSONResponse({"redirect": "/users/dashboard", "success": "Shipment successfully created."})
         return JSONResponse({
             "redirect": f"/shipments/{sm_uuid}",
             "success": "Shipment created."

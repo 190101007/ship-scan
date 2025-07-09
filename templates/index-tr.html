@@ -18,30 +18,27 @@
 
     <main>
         <section class="project-description">
-            <p>Kargo Gizliliğini Ön Plana Alan Yenilikçi Bir Çözüm</p>
 
-            <p>Günümüzde kargo süreçlerinde kişisel bilgilerin korunması büyük bir sorun haline geldi. Kargo
-                etiketlerinde ad, soyad, adres detayları, hatta bazen kargo içeriği gibi hassas bilgiler açıkça yazıyor.
-                Bu durum, özellikle yetkisiz kişilerin eline geçtiğinde gizlilik ihlallerine yol açabiliyor. Örneğin,
-                bazı kargo çalışanları, gönderici firmanın kim olduğunu bildiklerinde, sırf meraktan paketleri açıp
-                içeriğine bakma eğiliminde olabiliyor.</p>
+            <p>Bu proje, kargo gizliliğine bir çözüm olarak geliştirildi. Kargo paketlerinin üstünde kişisel hassas
+                veriler herkes tarafından görülebiliyor. O kargo paketindeki hassas veriler, size ulaşana kadar veya
+                sizden çöpe gidene kadar biri tarafından ele geçirilip sizin adınızdan numaranızdan oturduğunuz
+                apartmanın dairesine kadar görülebilir. Bu durum kişisel alanı tehdit altında tutar.</p>
 
-            <p>Bu soruna çözüm olarak, QR kod tabanlı bir sistem geliştirdim. Sistem, kargo bilgilerini şifreli bir
-                şekilde QR kodun içine yerleştiriyor. Böylece, kargo üzerinde kişisel bilgiler açıkça yazmıyor. QR kodun
-                içeriğine sadece yetkili kişiler erişebiliyor. Örneğin, şube çalışanları tüm bilgileri görebilirken,
-                dağıtım personeli sadece teslimat için gerekli olan kısımları görüyor. Uygulamaya giriş yapamayan biri
-                ise hiçbir bilgiyi okuyamıyor.</p>
+            <p>Bu soruna çözüm olarak bir web uygulaması geliştirdim. Bu uygulamaya sadece tanımlı yetkili kişiler
+                girebiliyor. Ayrıca uygulama içinde roller ve hiyerarşi var. Şube tüm detayları görebilirken, kargo
+                dağıtım görevlisi bilgilere kısıtlı ve sadece gerekli bilgilere erişebiliyor. Bu kısıtlamalar ve
+                hiyerarşi kargo gizliliğini pekiştiriyor. Olası gizlilik ihlali durumlarının önüne geçiyor. Hem kargo
+                sahibi kargo alıcısını memnun ettiği için, hem kargo şirketi gizlilik sunmayan şirketlere göre tercih
+                edildiği için hem de kargo alıcısı gizliliğinin korunduğu için fayda görüyor.</p>
 
-            <p>Proje, tamamen kargo şirketine özel bir sistem olarak tasarlandı. Dışarıdan herhangi biri, QR kodu
-                tarasa bile şifreli veriyi çözemiyor. Hem yetkilendirme (authorization) hem de kimlik doğrulama
-                (authentication) mekanizmalarıyla güvenlik en üst seviyede tutuluyor.</p>
+            <p>Bu uygulamadaki yöntem, kişisel bilgileri alıp QR'a link olarak gömmek. Şube giriş yapar, kargo
+                bilgilerini alır, eğer sender kayıtlı değilse sender için adres bilgisi de alarak kargo qr'ını
+                oluşturur. QR çıktısını alıp kargo paketine yapıştırır. Dağıtım sırasında ise kargo dağıtım görevlisi
+                kargo paketindeki QR'ı okutarak sadece gerekli bilgileri görür ve teslim eder. Kargoyu alan kişi ise
+                kargo paketini çöpe atarken bilgilerini karalamak veya kargo paketini parçalamak zorunda kalmaz çünkü
+                dışarıdan biri erişmeye çalıştığı zaman uygulama içine giremez.</p>
 
-            <p>Bu sayede, müşterilerin kişisel verileri korunurken, kargo süreçleri de daha güvenli hale geliyor. Artık
-                kargo poşetlerinin gereksiz yere açılması, adres bilgilerinin yetkisiz kişilerin eline geçmesi gibi
-                riskler ortadan kalkıyor.</p>
 
-            <p>Kısacası, bu proje, kargo sektöründeki gizlilik açıklarını kapatmayı ve hem gönderen hem de alıcı için
-                daha güvenli bir deneyim sunmayı hedefliyor.</p>
         </section>
     </main>
 
