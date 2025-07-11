@@ -27,7 +27,7 @@ Cargo Privacy Web Application, kişisel bilgilerin sadece yetkili kullanıcılar
 
 ## ⚙️ Kurulum
 ```bash
-git clone https://github.com/190101007/ship-scan
+git clone https://github.com/190101007/ship-scan.git
 pip install -r requirements.txt
 uvicorn main:app --reload
 
